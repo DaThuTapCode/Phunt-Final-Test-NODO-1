@@ -45,8 +45,6 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
             LEFT JOIN FETCH c.students s
             WHERE 
                 c.status = 1
-            AND 
-                s.status = 1
             """)
     Page<Course> findAll(Pageable pageable);
 

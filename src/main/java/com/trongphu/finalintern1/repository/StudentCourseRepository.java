@@ -23,13 +23,14 @@ public interface StudentCourseRepository extends JpaRepository<StudentCourse, St
 
     @Modifying
     @Query("""
-            UPDATE  StudentCourse sc SET sc.status = 0 WHERE 
+            UPDATE  StudentCourse sc SET sc.status = :status WHERE 
             (:studentId IS NULL OR sc.id.studentId = :studentId)
             AND (:courseId IS NULL OR sc.id.courseId = :courseId)
             """)
     void updateStatusByStudentOrCourse(
             @Param("studentId") Long studentId,
-            @Param("courseId") Long courseId
+            @Param("courseId") Long courseId,
+            @Param("status") Integer status
     );
 
     @Query("""

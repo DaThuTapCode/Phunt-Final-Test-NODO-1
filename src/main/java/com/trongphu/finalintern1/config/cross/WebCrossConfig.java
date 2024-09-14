@@ -13,11 +13,13 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class WebCrossConfig implements WebMvcConfigurer {
     @Value("${frontend.url}")
-    private String vueServer;
+    private String vueServer1;
+    @Value("${frontend.url2}")
+    private String vueServer2;
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins(vueServer)
+                .allowedOrigins(vueServer1,vueServer2)
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true);

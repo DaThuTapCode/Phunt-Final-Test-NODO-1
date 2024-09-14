@@ -19,7 +19,7 @@ public interface IBaseService<E, ID, RQ, RS> {
      *
      * @param paginationObject là đối tượng hỗ trợ phân trang
      */
-    Page<RS> getPage(PaginationObject paginationObject) throws ClassNotFoundException;
+    Page<RS> getPage(PaginationObject paginationObject);
 
     /**
      * Lấy Entity theo id

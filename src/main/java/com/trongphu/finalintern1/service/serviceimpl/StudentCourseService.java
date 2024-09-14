@@ -44,21 +44,18 @@ public class StudentCourseService implements IStudentCourseService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<StudentCourseResponseDTO> findEnrolledStudents() {
 //        return studentCourseResponseDTOMapper.listToDTO(studentCourseRepository.findByStatus(1));
         return null;
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<StudentCourseResponseDTO> findDroppedStudents() {
 //        return studentCourseResponseDTOMapper.listToDTO(studentCourseRepository.findByStatus(0));
         return null;
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<StudentCourseResponseDTO> findByStudentId(Long studentId) {
         List<StudentCourseResponseDTO> responseDTOList = studentCourseResponseDTOMapper.listToDTO(studentCourseRepository.findByStudentId(studentId));
         if (responseDTOList.isEmpty()) {
@@ -68,7 +65,6 @@ public class StudentCourseService implements IStudentCourseService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<StudentCourseResponseDTO> findByCourseId(Long courseId) {
         List<StudentCourseResponseDTO> responseDTOList = studentCourseResponseDTOMapper.listToDTO(studentCourseRepository.findByCourseId(courseId));
         if (responseDTOList.isEmpty()) {
@@ -86,7 +82,7 @@ public class StudentCourseService implements IStudentCourseService {
     @Override
     @Transactional
     public void deleteByStudentOrCourse(Long studentId, Long courseId) {
-        studentCourseRepository.updateStatusByStudentOrCourse(studentId, courseId);
+        studentCourseRepository.updateStatusByStudentOrCourse(studentId, courseId, 0);
     }
 
     @Override

@@ -54,7 +54,6 @@ public class CourseService implements ICourseService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Page<CourseResponseDTO> getPage(PaginationObject paginationObject) {
         Page<CourseResponseDTO> responseDTOPage = courseRepository.findAll(paginationObject.toPageable()).map(courseResponseDTOMapper::toDTO);
         if (responseDTOPage.isEmpty()) {
@@ -64,7 +63,6 @@ public class CourseService implements ICourseService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public CourseResponseDTO getById(Long id) {
         Course course = courseRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("error.resource_not_found", Course.class.getSimpleName()));
         return courseResponseDTOMapper.toDTO(course);
@@ -75,7 +73,7 @@ public class CourseService implements ICourseService {
     public void softDelete(Long id, int status) {
         Course course = courseRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("error.resource_not_found", Course.class.getSimpleName()));
         courseRepository.softDelete(id, status);
-        studentCourseRepository.updateStatusByStudentOrCourse(null, course.getId());
+        studentCourseRepository.updateStatusByStudentOrCourse(null, course.getId(), 0);
     }
 
     @Override
@@ -103,12 +101,11 @@ public class CourseService implements ICourseService {
         courseUpdate.setCreatedAt(courseExisting.getCreatedAt());
         courseUpdate.setUpdatedAt(LocalDateTime.now());
         handleFileUpload(requestDTO.getFileImg(), courseUpdate, courseExisting.getImg());
-        courseRepository.save(courseUpdate);
-        return null;
+        Course courseUpdated = courseRepository.save(courseUpdate);
+        return courseResponseDTOMapper.toDTO(courseUpdated);
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Page<CourseResponseShortDTO> findByParam(String title, String courseCode, LocalDate createdFrom, LocalDate createdTo, PaginationObject paginationObject) {
         Page<CourseResponseShortDTO> page = courseRepository.searchCourses(
                 title

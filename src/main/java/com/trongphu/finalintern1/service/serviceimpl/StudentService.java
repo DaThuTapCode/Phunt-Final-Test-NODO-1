@@ -2,10 +2,14 @@ package com.trongphu.finalintern1.service.serviceimpl;
 
 import com.trongphu.finalintern1.dto.studentdto.request.StudentRequestDTO;
 import com.trongphu.finalintern1.dto.studentdto.response.StudentResponseDTO;
+import com.trongphu.finalintern1.dto.studentdto.response.StudentSearchResponseDTO;
 import com.trongphu.finalintern1.entity.Course;
 import com.trongphu.finalintern1.entity.Student;
+import com.trongphu.finalintern1.entity.StudentCourse;
+import com.trongphu.finalintern1.entity.StudentCourseId;
 import com.trongphu.finalintern1.mapper.studentmapper.request.StudentRequestDTOMapper;
 import com.trongphu.finalintern1.mapper.studentmapper.response.StudentResponseDTOMapper;
+import com.trongphu.finalintern1.mapper.studentmapper.response.StudentSearchResponseDTOMapper;
 import com.trongphu.finalintern1.repository.CourseRepository;
 import com.trongphu.finalintern1.repository.StudentCourseRepository;
 import com.trongphu.finalintern1.repository.StudentRepository;
@@ -13,6 +17,7 @@ import com.trongphu.finalintern1.service.serviceinterface.IStudentService;
 import com.trongphu.finalintern1.util.PaginationObject;
 
 import com.trongphu.finalintern1.util.exception.DuplicateCodeException;
+import com.trongphu.finalintern1.util.exception.DuplicateEntityRecordException;
 import com.trongphu.finalintern1.util.exception.ResourceNotFoundException;
 import com.trongphu.finalintern1.util.exception.uploadsfile.FileUploadingException;
 import com.trongphu.finalintern1.util.file.FileUploadUtil;
@@ -45,18 +50,20 @@ public class StudentService implements IStudentService {
 
     private final StudentRequestDTOMapper studentRequestDTOMapper;
     private final StudentResponseDTOMapper studentResponseDTOMapper;
+    private final StudentSearchResponseDTOMapper studentSearchResponseDTOMapper;
 
     public StudentService(
             StudentRepository studentRepository,
             StudentCourseRepository studentCourseRepository,
             CourseRepository courseRepository,
             StudentRequestDTOMapper studentRequestDTOMapper,
-            StudentResponseDTOMapper studentResponseDTOMapper) {
+            StudentResponseDTOMapper studentResponseDTOMapper, StudentSearchResponseDTOMapper studentSearchResponseDTOMapper) {
         this.studentRepository = studentRepository;
         this.studentCourseRepository = studentCourseRepository;
         this.courseRepository = courseRepository;
         this.studentRequestDTOMapper = studentRequestDTOMapper;
         this.studentResponseDTOMapper = studentResponseDTOMapper;
+        this.studentSearchResponseDTOMapper = studentSearchResponseDTOMapper;
     }
 
     @Override
@@ -64,11 +71,10 @@ public class StudentService implements IStudentService {
     public void softDelete(Long id, int status) {
         Student student = studentRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("error.resource_not_found", Student.class.getSimpleName()));
         studentRepository.softDeleteStudent(student.getId(), status);
-        studentCourseRepository.updateStatusByStudentOrCourse(student.getId(),null);
+        studentCourseRepository.updateStatusByStudentOrCourse(student.getId(), null, 0);
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Page<StudentResponseDTO> getPage(PaginationObject paginationObject) {
         Page<Student> studentPage = studentRepository.findAll(paginationObject.toPageable());
         if (studentPage.isEmpty()) {
@@ -78,7 +84,6 @@ public class StudentService implements IStudentService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public StudentResponseDTO getById(Long id) {
         Student student = studentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("error.resource_not_found", Student.class.getSimpleName()));
@@ -97,7 +102,7 @@ public class StudentService implements IStudentService {
         student.setStatus(1);
         Student studentSaved = studentRepository.save(student);
         if (studentRequestDTO.getCoursesId() != null) {
-            if(!studentRequestDTO.getCoursesId().isEmpty()){
+            if (!studentRequestDTO.getCoursesId().isEmpty()) {
                 List<Course> courses = courseRepository.findAllById(studentRequestDTO.getCoursesId());
                 if (courses.size() < studentRequestDTO.getCoursesId().size()) {
                     throw new ResourceNotFoundException("error.resource_not_found", Course.class.getSimpleName());
@@ -119,11 +124,41 @@ public class StudentService implements IStudentService {
         Student updatedStudent = studentRequestDTOMapper.toEntity(studentRequestDTO);
 
         // Giữ nguyên các trường không được cập nhật từ DTO
-        updatedStudent.setId(id);
+        updatedStudent.setId(studentExisting.getId());
         updatedStudent.setStudentCode(studentExisting.getStudentCode());
         updatedStudent.setImg(studentExisting.getImg());
         updatedStudent.setCreatedAt(studentExisting.getCreatedAt());
-        updatedStudent.setCourses(studentExisting.getCourses());
+
+        // Cập nhật các khóa học
+        if (studentRequestDTO.getCoursesId() != null) {
+            if (!studentRequestDTO.getCoursesId().isEmpty()) {
+                List<Course> courses = courseRepository.findAllById(studentRequestDTO.getCoursesId());
+                if (courses.size() < studentRequestDTO.getCoursesId().size()) {
+                    throw new ResourceNotFoundException("error.resource_not_found", Course.class.getSimpleName());
+                }
+
+                for (Course c : courses) {
+                    //Kiểm tra các mối quan hệ đã có từ trước chưa
+                    StudentCourseId studentCourseId = new StudentCourseId(updatedStudent.getId(), c.getId());
+
+                    StudentCourse studentCourseExisting = studentCourseRepository.findById(studentCourseId).orElse(null);
+                    //Nếu mqh đã có mà status = 0 thì update lại thành 1
+                    if (studentCourseExisting != null) {
+                        System.out.println("mqh đã tồn tại");
+                        studentCourseRepository.updateStatusByStudentOrCourse(updatedStudent.getId(), c.getId(), 1);
+                    } else {
+                        //mqh chưa tồn tại tạo 1 mqh mới
+                        System.out.println("mqh chưa tồn tại");
+                        StudentCourse studentCourseNew = new StudentCourse();
+                        studentCourseNew.setCourse(c);
+                        studentCourseNew.setStudent(updatedStudent);
+                        studentCourseNew.setStatus(1);
+                        studentCourseRepository.save(studentCourseNew);
+                    }
+                }
+                updatedStudent.setCourses(courses);
+            }
+        }
 
         // Xử lý hình ảnh nếu có file đính kèm
         handleFileUpload(studentRequestDTO.getFileImg(), updatedStudent, studentExisting.getImg());
@@ -139,11 +174,10 @@ public class StudentService implements IStudentService {
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public Page<StudentResponseDTO> searchPage(String name, String studentCode, String email, LocalDate createdFrom, LocalDate createdTo, PaginationObject paginationObject) {
-        Page<StudentResponseDTO> page = studentRepository.searchStudentByParam
+    public Page<StudentSearchResponseDTO> searchPage(String name, String studentCode, String email, LocalDate createdFrom, LocalDate createdTo, PaginationObject paginationObject) {
+        Page<StudentSearchResponseDTO> page = studentRepository.searchStudentByParam
                 (name, studentCode, email, createdFrom == null ? null : createdFrom.atStartOfDay(), createdTo == null ? null : createdTo.atTime(LocalTime.MAX), paginationObject.toPageable())
-                .map(studentResponseDTOMapper::toDTO);
+                .map(studentSearchResponseDTOMapper::toDTO);
         if (page.isEmpty()) {
             throw new ResourceNotFoundException("error.resource_not_found", "Search Page Student");
         }
@@ -196,6 +230,5 @@ public class StudentService implements IStudentService {
             }
         }
     }
-
 
 }

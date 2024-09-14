@@ -7,7 +7,6 @@ package com.trongphu.finalintern1.util.exception.uploadsfile;
  */
 public class FileSizeExceededException extends RuntimeException{
 
-
     private int conditionSize;
 
     public FileSizeExceededException(String message, int conditionSize){
@@ -18,4 +17,5 @@ public class FileSizeExceededException extends RuntimeException{
     public int getConditionSize(){
         return this.conditionSize;
     }
+
 }

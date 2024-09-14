@@ -15,7 +15,7 @@ import java.time.LocalDate;
  * @author Trong Phu
  */
 
-public interface ICourseService extends IBaseService<Course, Long, CourseRequestDTO, CourseResponseDTO>{
+public interface ICourseService extends IBaseService<Course, Long, CourseRequestDTO, CourseResponseDTO> {
     Page<CourseResponseShortDTO> findByParam(String title, String courseCode, LocalDate createdFrom, LocalDate createdTo, PaginationObject paginationObject);
 
 }

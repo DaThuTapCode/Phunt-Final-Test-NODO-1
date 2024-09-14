@@ -1,13 +1,12 @@
-package com.trongphu.finalintern1.dto.coursedto.response;
+package com.trongphu.finalintern1.dto.studentdto.response;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-
 import lombok.*;
 
 import java.time.LocalDateTime;
 
 /**
- * Created by Trong Phu on 28/08/2024 22:25
+ * Created by Trong Phu on 04/09/2024 14:58
  *
  * @author Trong Phu
  */
@@ -16,15 +15,14 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class CourseResponseDTO {
-
+public class StudentSearchResponseDTO {
     private Long id;
 
-    private String courseCode;
+    private String studentCode;
 
-    private String title;
+    private String name;
 
-    private String description;
+    private String email;
 
     private String img;
 
@@ -36,5 +34,5 @@ public class CourseResponseDTO {
 
     private Integer status;
 
-//    private List<StudentResponseShortDTO> students;
+    private String course;
 }

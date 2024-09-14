@@ -3,13 +3,13 @@ package com.trongphu.finalintern1.controller;
 import com.trongphu.finalintern1.config.i18nconfig.Translator;
 import com.trongphu.finalintern1.dto.studentdto.request.StudentRequestDTO;
 import com.trongphu.finalintern1.dto.studentdto.response.StudentResponseDTO;
+import com.trongphu.finalintern1.dto.studentdto.response.StudentSearchResponseDTO;
 import com.trongphu.finalintern1.entity.Student;
 import com.trongphu.finalintern1.service.serviceinterface.IStudentService;
 import com.trongphu.finalintern1.util.PaginationObject;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
-import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -55,16 +55,15 @@ public class StudentController {
     /**
      * @param paginationObject {@link PaginationObject}  đối tượng hỗ trợ các tham số cho phân trang
      * @apiNote API lấy phân trang {@link Student}
-     * GET http://localhost:8080/api/student/get-page
+     * POST http://localhost:8080/api/student/get-page
      */
-    @GetMapping(value = "get-page")
+    @PostMapping(value = "get-page")
     public ResponseEntity<?> getPageStudent(
-            @RequestBody @Valid PaginationObject paginationObject,
-            PagedResourcesAssembler<StudentResponseDTO> assembler
-    ) throws ClassNotFoundException {
+            @RequestBody @Valid PaginationObject paginationObject
+    )  {
         paginationObject.setEntityClass(Student.class);
         Page<StudentResponseDTO> studentResponseDTOPage = studentService.getPage(paginationObject);
-        return ResponseEntity.ok(assembler.toModel(studentResponseDTOPage));
+        return ResponseEntity.ok(studentResponseDTOPage);
     }
 
     /**
@@ -83,11 +82,9 @@ public class StudentController {
             @RequestParam(required = false) LocalDate createdFrom,
             @RequestParam(required = false) LocalDate createdTo,
             @RequestBody PaginationObject paginationObject
-//            ,PagedResourcesAssembler<StudentResponseDTO> assembler
     ) {
         paginationObject.setEntityClass(Student.class);
-        Page<StudentResponseDTO> searchPage = studentService.searchPage(name, studentCode, email, createdFrom, createdTo, paginationObject);
-//        return ResponseEntity.ok(assembler.toModel(searchPage));
+        Page<StudentSearchResponseDTO> searchPage = studentService.searchPage(name, studentCode, email, createdFrom, createdTo, paginationObject);
         return ResponseEntity.ok(searchPage);
     }
 
