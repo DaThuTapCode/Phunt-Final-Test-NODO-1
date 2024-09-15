@@ -100,6 +100,7 @@ public class CourseService implements ICourseService {
         courseUpdate.setCourseCode(courseExisting.getCourseCode());
         courseUpdate.setCreatedAt(courseExisting.getCreatedAt());
         courseUpdate.setUpdatedAt(LocalDateTime.now());
+        courseUpdate.setStatus(1);
         handleFileUpload(requestDTO.getFileImg(), courseUpdate, courseExisting.getImg());
         Course courseUpdated = courseRepository.save(courseUpdate);
         return courseResponseDTOMapper.toDTO(courseUpdated);
